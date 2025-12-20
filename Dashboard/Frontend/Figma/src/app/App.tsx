@@ -2,10 +2,13 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { SensorGauge } from './components/SensorGauge';
 import { AltitudeChart } from './components/AltitudeChart';
 import { AccelerationChart } from './components/AccelerationChart';
+import { GyroscopeChart } from './components/GyroscopeChart';
+import { MagnetometerChart } from './components/MagnetometerChart';
 import { VideoFeed } from './components/VideoFeed';
-import { AltimeterFlightSelector, FlightRecord } from './components/AltimeterFlightSelector';
+import { FlightSelector, FlightRecord } from './components/FlightSelector';
+import { GPSDisplay } from './components/GPSDisplay';
 import { TimelineControl } from './components/TimelineControl';
-import { Activity } from 'lucide-react';
+import { Activity, Calendar } from 'lucide-react';
 
 type FlightStatus = 'standby' | 'armed' | 'flight' | 'recovery' | 'landed';
 
@@ -13,17 +16,33 @@ interface TelemetryDataPoint {
   time: number;
   altitude: number;
   speed: number;
-  acceleration: number;
+  
+  // MPU6050 - Accelerometer (m/s²)
   accelX: number;
   accelY: number;
   accelZ: number;
-  temperature: number;
-  pressure: number;
-  batteryLevel: number;
-  signalStrength: number;
-  flightStatus: FlightStatus;
+  
+  // MPU6050 - Gyroscope (deg/s)
+  gyroX: number;
+  gyroY: number;
+  gyroZ: number;
+  
+  // HMC5883L - Magnetometer (µT)
+  magX: number;
+  magY: number;
+  magZ: number;
+  
+  // BME280 - Environmental
+  temperature: number;  // °C
+  pressure: number;      // kPa
+  humidity: number;      // %
+  
+  // GPS
   gpsLat: number;
   gpsLon: number;
+  gpsAltitude: number;   // m
+  
+  flightStatus: FlightStatus;
 }
 
 interface FlightData {
@@ -87,17 +106,33 @@ function generateFlightData(id: string, date: string, time: string): FlightData 
       time: t,
       altitude: Math.max(0, altitude),
       speed: Math.max(0, speed),
-      acceleration,
+      
+      // MPU6050 - Accelerometer
       accelX: acceleration * (0.8 + Math.random() * 0.4),
       accelY: acceleration * (0.9 + Math.random() * 0.2),
       accelZ: acceleration,
+      
+      // MPU6050 - Gyroscope (simulate rotation during flight)
+      gyroX: flightStatus === 'flight' ? (Math.random() - 0.5) * 100 : Math.random() * 5,
+      gyroY: flightStatus === 'flight' ? (Math.random() - 0.5) * 100 : Math.random() * 5,
+      gyroZ: flightStatus === 'flight' ? (Math.random() - 0.5) * 50 : Math.random() * 5,
+      
+      // HMC5883L - Magnetometer (Earth's magnetic field ~50µT)
+      magX: 30 + Math.sin(t * 0.5) * 20 + Math.random() * 5,
+      magY: 40 + Math.cos(t * 0.5) * 20 + Math.random() * 5,
+      magZ: -50 + Math.sin(t * 0.3) * 10 + Math.random() * 5,
+      
+      // BME280 - Environmental
       temperature: 22 - altitude * 0.01 + Math.random() * 0.5,
       pressure: 101.3 - altitude * 0.01,
-      batteryLevel: Math.max(20, 87 - t * 0.5),
-      signalStrength: Math.max(40, 92 - Math.random() * 10),
-      flightStatus,
+      humidity: 45 + Math.random() * 10 - altitude * 0.02,
+      
+      // GPS
       gpsLat: 37.7749 + (altitude * 0.0001) + Math.random() * 0.001,
       gpsLon: -122.4194 + (altitude * 0.0001) + Math.random() * 0.001,
+      gpsAltitude: altitude + Math.random() * 5,
+      
+      flightStatus,
     });
   }
 
@@ -129,6 +164,7 @@ function App() {
   const [selectedFlightId, setSelectedFlightId] = useState(mockFlights[0].id);
   const [currentTime, setCurrentTime] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const selectedFlight = useMemo(
     () => mockFlights.find(f => f.id === selectedFlightId) || mockFlights[0],
@@ -141,18 +177,60 @@ function App() {
     return selectedFlight.telemetry[Math.min(index, selectedFlight.telemetry.length - 1)];
   }, [currentTime, selectedFlight]);
 
-  // Get chart data up to current time
+  // Get full chart data (show all data)
   const altitudeHistory = useMemo(() => {
-    return selectedFlight.telemetry
-      .filter(d => d.time <= currentTime)
-      .map(d => ({ time: d.time, altitude: d.altitude }));
-  }, [currentTime, selectedFlight]);
+    return selectedFlight.telemetry.map(d => ({ time: d.time, altitude: d.altitude }));
+  }, [selectedFlight]);
 
   const accelerationHistory = useMemo(() => {
+    return selectedFlight.telemetry.map(d => ({ time: d.time, x: d.accelX, y: d.accelY, z: d.accelZ }));
+  }, [selectedFlight]);
+
+  const gyroscopeHistory = useMemo(() => {
+    return selectedFlight.telemetry.map(d => ({ time: d.time, x: d.gyroX, y: d.gyroY, z: d.gyroZ }));
+  }, [selectedFlight]);
+
+  const magnetometerHistory = useMemo(() => {
+    return selectedFlight.telemetry.map(d => ({ time: d.time, x: d.magX, y: d.magY, z: d.magZ }));
+  }, [selectedFlight]);
+
+  // Get GPS flight path up to current time
+  const gpsFlightPath = useMemo(() => {
     return selectedFlight.telemetry
       .filter(d => d.time <= currentTime)
-      .map(d => ({ time: d.time, x: d.accelX, y: d.accelY, z: d.accelZ }));
+      .map(d => ({ lat: d.gpsLat, lon: d.gpsLon }));
   }, [currentTime, selectedFlight]);
+
+  // Calculate min/max values for each sensor from the flight data
+  const sensorRanges = useMemo(() => {
+    const telemetry = selectedFlight.telemetry;
+    return {
+      altitude: {
+        min: Math.floor(Math.min(...telemetry.map(d => d.altitude))),
+        max: Math.ceil(Math.max(...telemetry.map(d => d.altitude)))
+      },
+      speed: {
+        min: Math.floor(Math.min(...telemetry.map(d => d.speed))),
+        max: Math.ceil(Math.max(...telemetry.map(d => d.speed)))
+      },
+      temperature: {
+        min: Math.floor(Math.min(...telemetry.map(d => d.temperature))),
+        max: Math.ceil(Math.max(...telemetry.map(d => d.temperature)))
+      },
+      pressure: {
+        min: Math.floor(Math.min(...telemetry.map(d => d.pressure))),
+        max: Math.ceil(Math.max(...telemetry.map(d => d.pressure)))
+      },
+      humidity: {
+        min: Math.floor(Math.min(...telemetry.map(d => d.humidity))),
+        max: Math.ceil(Math.max(...telemetry.map(d => d.humidity)))
+      },
+      accelZ: {
+        min: Math.floor(Math.min(...telemetry.map(d => d.accelZ))),
+        max: Math.ceil(Math.max(...telemetry.map(d => d.accelZ)))
+      }
+    };
+  }, [selectedFlight]);
 
   // Playback control
   useEffect(() => {
@@ -204,23 +282,55 @@ function App() {
       <div className="max-w-[2000px] mx-auto">
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
-          <Activity className="w-8 h-8 text-blue-500" />
-          <h1 className="text-3xl">Model Rocket Telemetry Dashboard</h1>
+          <img src="/star-pi-logo.png" alt="Star Pi Logo" className="w-8 h-8" />
+          <h1 className="text-3xl">Star Pi Dashboard</h1>
         </div>
 
         {/* Main Layout */}
-        <div className="grid grid-cols-12 gap-6">
-          {/* Left Sidebar - Flight Selector */}
-          <div className="col-span-12 lg:col-span-3 xl:col-span-2">
-            <AltimeterFlightSelector
-              flights={flightRecords}
-              selectedFlightId={selectedFlightId}
-              onSelectFlight={setSelectedFlightId}
-            />
-          </div>
+        <div className="relative">
+          {/* Calendar Toggle Button - Shows when sidebar is closed */}
+          {!isSidebarOpen && (
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="fixed left-6 top-1/2 -translate-y-1/2 z-50 bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-md transition-colors shadow-lg"
+              aria-label="Open flight history"
+            >
+              <Calendar className="w-5 h-5" />
+            </button>
+          )}
 
-          {/* Main Content */}
-          <div className="col-span-12 lg:col-span-9 xl:col-span-10 space-y-6">
+          {/* Left Sidebar - Flight Selector - Overlay */}
+          {isSidebarOpen && (
+            <>
+              {/* Backdrop */}
+              <div
+                className="fixed inset-0 bg-black/50 z-40"
+                onClick={() => setIsSidebarOpen(false)}
+              />
+              
+              {/* Sidebar */}
+              <div className="fixed left-0 top-0 bottom-0 w-[320px] z-50 p-6 transition-transform duration-300">
+                <div className="relative h-full">
+                  {/* Close button */}
+                  <button
+                    onClick={() => setIsSidebarOpen(false)}
+                    className="absolute -right-3 top-6 z-10 bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-md transition-colors shadow-lg"
+                    aria-label="Close flight history"
+                  >
+                    <Calendar className="w-4 h-4" />
+                  </button>
+                  <FlightSelector
+                    flights={flightRecords}
+                    selectedFlightId={selectedFlightId}
+                    onSelectFlight={setSelectedFlightId}
+                  />
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Main Content - Full Width */}
+          <div className="space-y-6">
             {/* Timeline Control */}
             <TimelineControl
               currentTime={currentTime}
@@ -233,9 +343,9 @@ function App() {
             />
 
             {/* Dashboard Grid */}
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-              {/* Video Feeds */}
-              <div className="xl:col-span-1 space-y-6">
+            <div className="space-y-6">
+              {/* Video Feeds - Horizontal */}
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
                 {selectedFlight.cameras.map((cameraName, index) => (
                   <VideoFeed
                     key={index}
@@ -245,72 +355,78 @@ function App() {
                 ))}
               </div>
 
-              {/* Sensors and Charts */}
-              <div className="xl:col-span-2 space-y-6">
+              {/* Data Section */}
+              <div className="space-y-6">
                 {/* Sensor Gauges */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  <SensorGauge
-                    label="Altitude"
-                    value={currentData.altitude}
-                    unit="m"
-                    max={1500}
-                    color="#3b82f6"
-                  />
-                  <SensorGauge
-                    label="Velocity"
-                    value={currentData.speed}
-                    unit="m/s"
-                    max={600}
-                    color="#10b981"
-                  />
-                  <SensorGauge
-                    label="Acceleration"
-                    value={currentData.acceleration}
-                    unit="g"
-                    max={20}
-                    min={-5}
-                    color="#f59e0b"
-                    warningThreshold={12}
-                    dangerThreshold={16}
-                  />
-                  <SensorGauge
-                    label="Temperature"
-                    value={currentData.temperature}
-                    unit="°C"
-                    max={60}
-                    min={-20}
-                    color="#06b6d4"
-                    warningThreshold={40}
-                    dangerThreshold={50}
-                  />
-                  <SensorGauge
-                    label="Pressure"
-                    value={currentData.pressure}
-                    unit="kPa"
-                    max={110}
-                    min={80}
-                    color="#8b5cf6"
-                  />
-                  <SensorGauge
-                    label="Battery"
-                    value={currentData.batteryLevel}
-                    unit="%"
-                    max={100}
-                    min={0}
-                    color="#10b981"
-                    warningThreshold={30}
-                    dangerThreshold={15}
-                  />
-                </div>
-
-                {/* Charts */}
-                <AltitudeChart data={altitudeHistory} />
-                <AccelerationChart data={accelerationHistory} />
+                <SensorGauge
+                  label="Altitude"
+                  value={currentData.altitude}
+                  unit="m"
+                  max={sensorRanges.altitude.max}
+                  min={sensorRanges.altitude.min}
+                  color="#3b82f6"
+                />
+                <SensorGauge
+                  label="Velocity"
+                  value={currentData.speed}
+                  unit="m/s"
+                  max={sensorRanges.speed.max}
+                  min={sensorRanges.speed.min}
+                  color="#10b981"
+                />
+                <SensorGauge
+                  label="Acceleration"
+                  value={currentData.accelZ}
+                  unit="m/s²"
+                  max={sensorRanges.accelZ.max}
+                  min={sensorRanges.accelZ.min}
+                  color="#f59e0b"
+                />
+                <SensorGauge
+                  label="Temperature"
+                  value={currentData.temperature}
+                  unit="°C"
+                  max={sensorRanges.temperature.max}
+                  min={sensorRanges.temperature.min}
+                  color="#06b6d4"
+                />
+                <SensorGauge
+                  label="Pressure"
+                  value={currentData.pressure}
+                  unit="kPa"
+                  max={sensorRanges.pressure.max}
+                  min={sensorRanges.pressure.min}
+                  color="#8b5cf6"
+                />
+                <SensorGauge
+                  label="Humidity"
+                  value={currentData.humidity}
+                  unit="%"
+                  max={sensorRanges.humidity.max}
+                  min={sensorRanges.humidity.min}
+                  color="#14b8a6"
+                />
               </div>
+
+              {/* GPS Display */}
+              <GPSDisplay
+                latitude={currentData.gpsLat}
+                longitude={currentData.gpsLon}
+                altitude={currentData.altitude}
+                flightPath={gpsFlightPath}
+              />
+
+              {/* Charts */}
+              <AltitudeChart data={altitudeHistory} currentTime={currentTime} />
+              <AccelerationChart data={accelerationHistory} currentTime={currentTime} />
+              <GyroscopeChart data={gyroscopeHistory} currentTime={currentTime} />
+              <MagnetometerChart data={magnetometerHistory} currentTime={currentTime} />
             </div>
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 }

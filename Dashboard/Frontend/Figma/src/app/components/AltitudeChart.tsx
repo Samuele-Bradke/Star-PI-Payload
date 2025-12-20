@@ -1,11 +1,15 @@
 import React from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceDot } from 'recharts';
 
 interface AltitudeChartProps {
   data: Array<{ time: number; altitude: number }>;
+  currentTime?: number;
 }
 
-export function AltitudeChart({ data }: AltitudeChartProps) {
+export function AltitudeChart({ data, currentTime }: AltitudeChartProps) {
+  const currentPoint = currentTime !== undefined 
+    ? data.find(d => Math.abs(d.time - currentTime) < 0.1) || data[Math.floor(currentTime * 10)]
+    : null;
   return (
     <div className="bg-zinc-900 rounded-lg p-6 border border-zinc-800">
       <h3 className="mb-4 text-zinc-400">Altitude Over Time</h3>
@@ -16,10 +20,12 @@ export function AltitudeChart({ data }: AltitudeChartProps) {
             dataKey="time" 
             stroke="#71717a"
             label={{ value: 'Time (s)', position: 'insideBottom', offset: -5, fill: '#71717a' }}
+            tickFormatter={(value) => value.toFixed(1)}
           />
           <YAxis 
             stroke="#71717a"
-            label={{ value: 'Altitude (m)', angle: -90, position: 'insideLeft', fill: '#71717a' }}
+            label={{ value: 'Altitude (m)', angle: -90, position: 'insideLeft', dy: 70, fill: '#71717a' }}
+            tickFormatter={(value) => value.toFixed(1)}
           />
           <Tooltip 
             contentStyle={{ 
@@ -36,6 +42,16 @@ export function AltitudeChart({ data }: AltitudeChartProps) {
             strokeWidth={2}
             dot={false}
           />
+          {currentPoint && (
+            <ReferenceDot
+              x={currentPoint.time}
+              y={currentPoint.altitude}
+              r={6}
+              fill="#3b82f6"
+              stroke="#fff"
+              strokeWidth={2}
+            />
+          )}
         </LineChart>
       </ResponsiveContainer>
     </div>

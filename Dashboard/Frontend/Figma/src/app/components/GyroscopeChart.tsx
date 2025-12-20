@@ -1,18 +1,19 @@
 import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceDot } from 'recharts';
 
-interface AccelerationChartProps {
+interface GyroscopeChartProps {
   data: Array<{ time: number; x: number; y: number; z: number }>;
   currentTime?: number;
 }
 
-export function AccelerationChart({ data, currentTime }: AccelerationChartProps) {
+export function GyroscopeChart({ data, currentTime }: GyroscopeChartProps) {
   const currentPoint = currentTime !== undefined 
     ? data.find(d => Math.abs(d.time - currentTime) < 0.1) || data[Math.floor(currentTime * 10)]
     : null;
+
   return (
     <div className="bg-zinc-900 rounded-lg p-6 border border-zinc-800">
-      <h3 className="mb-4 text-zinc-400">3-Axis Acceleration</h3>
+      <h3 className="mb-4 text-zinc-400">Gyroscope (MPU6050)</h3>
       <ResponsiveContainer width="100%" height={250}>
         <LineChart data={data}>
           <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
@@ -24,7 +25,7 @@ export function AccelerationChart({ data, currentTime }: AccelerationChartProps)
           />
           <YAxis 
             stroke="#71717a"
-            label={{ value: 'Acceleration (m/s²)', angle: -90, position: 'insideLeft',  dy: 70, fill: '#71717a' }}
+            label={{ value: 'Angular Velocity (°/s)', angle: -90, position: 'insideLeft',  dy: 70, fill: '#71717a' }}
             tickFormatter={(value) => value.toFixed(1)}
           />
           <Tooltip 
@@ -42,7 +43,7 @@ export function AccelerationChart({ data, currentTime }: AccelerationChartProps)
             stroke="#ef4444" 
             strokeWidth={2}
             dot={false}
-            name="X-Axis"
+            name="Gyro-X"
           />
           <Line 
             type="monotone" 
@@ -50,7 +51,7 @@ export function AccelerationChart({ data, currentTime }: AccelerationChartProps)
             stroke="#10b981" 
             strokeWidth={2}
             dot={false}
-            name="Y-Axis"
+            name="Gyro-Y"
           />
           <Line 
             type="monotone" 
@@ -58,7 +59,7 @@ export function AccelerationChart({ data, currentTime }: AccelerationChartProps)
             stroke="#3b82f6" 
             strokeWidth={2}
             dot={false}
-            name="Z-Axis"
+            name="Gyro-Z"
           />
           {currentPoint && (
             <>

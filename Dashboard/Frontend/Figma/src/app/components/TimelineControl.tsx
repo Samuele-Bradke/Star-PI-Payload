@@ -30,7 +30,7 @@ export function TimelineControl({
 
   return (
     <div className="bg-zinc-900 rounded-lg p-6 border border-zinc-800">
-      <div className="flex items-center gap-4 mb-4">
+      <div className="flex items-center gap-4">
         <button
           onClick={onSkipBack}
           className="p-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 transition-colors"
@@ -78,25 +78,6 @@ export function TimelineControl({
           <span className="text-sm tabular-nums text-zinc-500 min-w-[80px] text-right">
             {formatTime(duration)}
           </span>
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-4 gap-4 text-center text-xs">
-        <div>
-          <div className="text-zinc-500 mb-1">Liftoff</div>
-          <div className="text-zinc-300">T+3.0s</div>
-        </div>
-        <div>
-          <div className="text-zinc-500 mb-1">Max Accel</div>
-          <div className="text-zinc-300">T+5.2s</div>
-        </div>
-        <div>
-          <div className="text-zinc-500 mb-1">Apogee</div>
-          <div className="text-zinc-300">T+18.4s</div>
-        </div>
-        <div>
-          <div className="text-zinc-500 mb-1">Landing</div>
-          <div className="text-zinc-300">T+35.0s</div>
         </div>
       </div>
     </div>
