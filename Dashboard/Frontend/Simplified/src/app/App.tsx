@@ -188,69 +188,71 @@ export default function App() {
         </div>
 
         {/* Content Grid */}
-        <div className="flex-1 grid grid-cols-2 gap-4 p-4 overflow-auto">
-          {/* Left Column */}
-          <div className="flex flex-col gap-4">
+        <div className="flex-1 grid grid-cols-2 gap-4 p-4 overflow-hidden">
+        {/* Left Column */}
+        <div className="flex flex-col gap-4 min-h-0">
             {/* Video Feed */}
-            <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4 flex-1 flex flex-col">
-              <div className="flex justify-between items-center mb-2">
+            <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4 flex-1 flex flex-col min-h-0">
+            <div className="flex justify-between items-center mb-2">
                 <h3 className="text-sm text-zinc-400">Video Feed</h3>
                 <button className="px-3 py-1 bg-green-600 text-white text-xs rounded">
-                  {selectedCamera}
+                {selectedCamera}
                 </button>
-              </div>
-              <div className="flex-1 bg-black rounded relative overflow-hidden">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-zinc-600 text-sm">Camera Selection: {selectedCamera}</div>
+            </div>
+            {/* Video Feed Container: Now has explicit height and relative positioning */}
+            <div className="flex-1 bg-black rounded relative overflow-hidden min-h-0">
+                {/* Placeholder for video feed */}
+                <div className="w-full h-full flex items-center justify-center">
+                <div className="text-zinc-600 text-sm">Camera Selection: {selectedCamera}</div>
                 </div>
-                
-                {/* Altitude Bar on Left */}
+
+                {/* Altitude Bar on Left: Positioned relative to the container */}
                 <div className="absolute left-4 top-4 bottom-4 w-10 bg-zinc-800/90 rounded-lg overflow-hidden flex flex-col-reverse border border-zinc-700">
-                  <div 
+                <div
                     className="bg-gradient-to-t from-blue-600 to-blue-400 transition-all duration-300 relative"
-                    style={{ 
-                      height: `${Math.min(100, ((currentData?.altitude || 0) / 1500) * 100)}%` 
+                    style={{
+                    height: `${Math.min(100, ((currentData?.altitude || 0) / 1500) * 100)}%`
                     }}
-                  >
+                >
                     <div className="absolute bottom-1 left-1/2 -translate-x-1/2 text-xs font-mono text-white font-bold">
-                      {Math.round(currentData?.altitude || 0)}
+                    {Math.round(currentData?.altitude || 0)}
                     </div>
-                  </div>
                 </div>
-                
-                {/* Overlaid Gauges at Bottom Left */}
+                </div>
+
+                {/* Overlaid Gauges at Bottom Left: Positioned relative to the container */}
                 <div className="absolute bottom-4 left-16 flex gap-4">
-                  <CircularGauge
+                <CircularGauge
                     value={currentData?.velocity || 0}
                     min={0}
                     max={600}
                     label="Vel"
                     unit="m/s"
-                  />
-                  <CircularGauge
+                />
+                <CircularGauge
                     value={currentData?.acceleration || 0}
                     min={-20}
                     max={20}
                     label="Accel"
                     unit="g"
-                  />
+                />
                 </div>
-                
-                {/* Camera Selectors at Bottom Right */}
+
+                {/* Camera Selectors at Bottom Right: Positioned relative to the container */}
                 <div className="absolute bottom-4 right-4 flex gap-2 flex-wrap max-w-[200px] justify-end">
-                  {['CAM0', 'CAM1', 'CAM2', 'CAM3', 'CAM4'].map(cam => (
+                {['CAM0', 'CAM1', 'CAM2', 'CAM3', 'CAM4'].map(cam => (
                     <button
-                      key={cam}
-                      onClick={() => setSelectedCamera(cam)}
-                      className={`px-3 py-1 text-xs rounded ${
+                    key={cam}
+                    onClick={() => setSelectedCamera(cam)}
+                    className={`px-3 py-1 text-xs rounded ${
                         selectedCamera === cam ? 'bg-zinc-700' : 'bg-zinc-800/80'
-                      }`}
+                    }`}
                     >
-                      {cam}
+                    {cam}
                     </button>
-                  ))}
+                ))}
                 </div>
-              </div>
+            </div>
             </div>
 
             {/* Sensor Readings */}
