@@ -80,10 +80,7 @@ export function GPSMap({ path, currentTime, currentLat, currentLon }: GPSMapProp
       <div className="flex justify-between items-start mb-2">
         <h3 className="text-sm text-zinc-400">GPS Trajectory</h3>
         <div className="text-right">
-          <div className="text-xs text-zinc-500 mb-0.5">GPS Position</div>
-          <div className="font-mono text-xs text-zinc-400">
-            {currentLat.toFixed(4)}°, {currentLon.toFixed(4)}°
-          </div>
+          <div className="text-xs text-zinc-500 mb-0.5">GPS Position: {currentLat.toFixed(4)}°, {currentLon.toFixed(4)}°</div>
         </div>
       </div>
       <div ref={mapRef} className="w-full flex-1 rounded bg-zinc-950" />

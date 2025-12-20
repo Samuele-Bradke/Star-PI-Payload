@@ -187,7 +187,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* Content Grid */}
         <div className="flex-1 grid grid-cols-2 gap-4 p-4 overflow-hidden">
         {/* Left Column */}
         <div className="flex flex-col gap-4 min-h-0">
@@ -199,14 +198,14 @@ export default function App() {
                 {selectedCamera}
                 </button>
             </div>
-            {/* Video Feed Container: Now has explicit height and relative positioning */}
-            <div className="flex-1 bg-black rounded relative overflow-hidden min-h-0">
+            {/* Video Feed Container */}
+            <div className="flex-1 bg-black rounded relative overflow-hidden min-h-[300px]">
                 {/* Placeholder for video feed */}
                 <div className="w-full h-full flex items-center justify-center">
                 <div className="text-zinc-600 text-sm">Camera Selection: {selectedCamera}</div>
                 </div>
 
-                {/* Altitude Bar on Left: Positioned relative to the container */}
+                {/* Altitude Bar on Left */}
                 <div className="absolute left-4 top-4 bottom-4 w-10 bg-zinc-800/90 rounded-lg overflow-hidden flex flex-col-reverse border border-zinc-700">
                 <div
                     className="bg-gradient-to-t from-blue-600 to-blue-400 transition-all duration-300 relative"
@@ -220,7 +219,7 @@ export default function App() {
                 </div>
                 </div>
 
-                {/* Overlaid Gauges at Bottom Left: Positioned relative to the container */}
+                {/* Overlaid Gauges at Bottom Left */}
                 <div className="absolute bottom-4 left-16 flex gap-4">
                 <CircularGauge
                     value={currentData?.velocity || 0}
@@ -238,14 +237,16 @@ export default function App() {
                 />
                 </div>
 
-                {/* Camera Selectors at Bottom Right: Positioned relative to the container */}
-                <div className="absolute bottom-4 right-4 flex gap-2 flex-wrap max-w-[200px] justify-end">
+                {/* Camera Selectors at Bottom Right */}
+                <div className="absolute bottom-4 right-4 flex flex-col gap-2">
                 {['CAM0', 'CAM1', 'CAM2', 'CAM3', 'CAM4'].map(cam => (
                     <button
                     key={cam}
                     onClick={() => setSelectedCamera(cam)}
-                    className={`px-3 py-1 text-xs rounded ${
-                        selectedCamera === cam ? 'bg-zinc-700' : 'bg-zinc-800/80'
+                    className={`px-3 py-1 text-xs rounded border ${
+                        selectedCamera === cam
+                        ? 'bg-green-600 text-white border-green-500'
+                        : 'bg-zinc-800/90 text-zinc-300 border-zinc-600 hover:bg-zinc-700'
                     }`}
                     >
                     {cam}
