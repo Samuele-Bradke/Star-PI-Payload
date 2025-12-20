@@ -1,5 +1,5 @@
 import React from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, ReferenceDot } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, ReferenceDot, Tooltip } from 'recharts';
 
 interface SimpleChartProps {
   data: Array<{ time: number; value: number }>;
@@ -27,6 +27,17 @@ export function SimpleChart({ data, currentTime, title, color }: SimpleChartProp
             stroke="#71717a"
             tick={{ fontSize: 10 }}
             tickFormatter={(value) => value.toFixed(1)}
+          />
+          <Tooltip
+            contentStyle={{
+              backgroundColor: '#18181b',
+              border: '1px solid #3f3f46',
+              borderRadius: '0.5rem',
+              fontSize: '12px'
+            }}
+            labelStyle={{ color: '#a1a1aa' }}
+            formatter={(value: number) => [value.toFixed(3), 'Value']}
+            labelFormatter={(label: number) => `Time: ${label.toFixed(2)}s`}
           />
           <Line 
             type="monotone" 

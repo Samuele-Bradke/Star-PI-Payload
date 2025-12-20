@@ -1,5 +1,5 @@
 import React from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, ReferenceDot, Legend } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, ReferenceDot, Legend, Tooltip } from 'recharts';
 
 interface VelocityChartProps {
   data: Array<{ time: number; vertical: number; horizontal: number }>;
@@ -29,6 +29,17 @@ export function VelocityChart({ data, currentTime }: VelocityChartProps) {
           <Legend 
             wrapperStyle={{ fontSize: '10px' }}
             iconType="line"
+          />
+          <Tooltip
+            contentStyle={{
+              backgroundColor: '#18181b',
+              border: '1px solid #3f3f46',
+              borderRadius: '0.5rem',
+              fontSize: '12px'
+            }}
+            labelStyle={{ color: '#a1a1aa' }}
+            formatter={(value: number, name: string) => [value.toFixed(3) + ' m/s', name]}
+            labelFormatter={(label: number) => `Time: ${label.toFixed(2)}s`}
           />
           <Line 
             type="monotone" 
