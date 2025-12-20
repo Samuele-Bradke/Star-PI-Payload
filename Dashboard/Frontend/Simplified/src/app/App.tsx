@@ -174,15 +174,16 @@ export default function App() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <div className="bg-zinc-900 border-b border-zinc-800 px-6 py-3 flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <h1 className="text-xl font-semibold">STAR PI MISSION</h1>
+        <div className="bg-zinc-900 border-b border-zinc-800 px-6 py-3 grid grid-cols-3 items-center">
+          <div></div>
+          <h1 className="text-xl font-semibold text-center">STAR PI MISSION</h1>
+          <div className="flex items-center gap-4 justify-end">
+            <div className="text-lg font-mono">
+              T+{Math.floor(currentTime / 60).toString().padStart(2, '0')}:
+              {Math.floor(currentTime % 60).toString().padStart(2, '0')}:
+              {Math.floor((currentTime % 1) * 100).toString().padStart(2, '0')}
+            </div>
             <span className="text-sm text-zinc-400">Software v1.0.0</span>
-          </div>
-          <div className="text-lg font-mono">
-            T+{Math.floor(currentTime / 60).toString().padStart(2, '0')}:
-            {Math.floor(currentTime % 60).toString().padStart(2, '0')}:
-            {Math.floor((currentTime % 1) * 100).toString().padStart(2, '0')}
           </div>
         </div>
 
@@ -190,14 +191,6 @@ export default function App() {
         <div className="flex-1 grid grid-cols-2 gap-4 p-4 overflow-auto">
           {/* Left Column */}
           <div className="flex flex-col gap-4">
-            {/* Status Panel */}
-            <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-              <div className="text-sm">
-                <div className="text-zinc-400 text-xs">Altitude</div>
-                <div className="font-mono text-lg">{currentData?.altitude.toFixed(1)}m</div>
-              </div>
-            </div>
-
             {/* Video Feed */}
             <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4 flex-1 flex flex-col">
               <div className="flex justify-between items-center mb-2">
@@ -212,18 +205,16 @@ export default function App() {
                 </div>
                 
                 {/* Altitude Bar on Left */}
-                <div className="absolute left-4 top-4 bottom-4 w-8 bg-zinc-800 rounded-full overflow-hidden flex flex-col-reverse">
+                <div className="absolute left-4 top-4 bottom-4 w-10 bg-zinc-800/90 rounded-lg overflow-hidden flex flex-col-reverse border border-zinc-700">
                   <div 
-                    className="bg-gradient-to-t from-blue-600 to-blue-400 transition-all duration-300"
+                    className="bg-gradient-to-t from-blue-600 to-blue-400 transition-all duration-300 relative"
                     style={{ 
                       height: `${Math.min(100, ((currentData?.altitude || 0) / 1500) * 100)}%` 
                     }}
-                  />
-                  <div className="absolute top-2 left-1/2 -translate-x-1/2 text-[8px] text-zinc-400 writing-mode-vertical transform rotate-180">
-                    ALT
-                  </div>
-                  <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] font-mono text-white font-bold">
-                    {Math.round(currentData?.altitude || 0)}
+                  >
+                    <div className="absolute bottom-1 left-1/2 -translate-x-1/2 text-xs font-mono text-white font-bold">
+                      {Math.round(currentData?.altitude || 0)}
+                    </div>
                   </div>
                 </div>
                 
