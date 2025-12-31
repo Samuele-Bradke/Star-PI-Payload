@@ -31,7 +31,7 @@ static TaskHandle_t task_core1_handle = NULL;
  * Task running on Core 0
  * Blinks LED slowly (500ms on, 500ms off)
  */
-static void task_core0(void *pvParameters)
+static void task_sd_write(void *pvParameters)
 {
     ESP_LOGI(TAG, "Task on Core 0 started (slow blink)");
     
@@ -56,7 +56,7 @@ static void task_core0(void *pvParameters)
  * a combined/irregular blinking pattern. This is intentional
  * to show that both cores are running independently!
  */
-static void task_core1(void *pvParameters)
+static void task_sensore_read(void *pvParameters)
 {
     ESP_LOGI(TAG, "Task on Core 1 started (fast blink)");
     
@@ -114,7 +114,7 @@ void app_main(void)
     
     // Create task pinned to Core 0
     xTaskCreatePinnedToCore(
-        task_core0,             // Task function
+        task_sd_write,             // Task function
         "blink_core0",          // Task name
         2048,                   // Stack size (bytes)
         NULL,                   // Parameters
@@ -125,7 +125,7 @@ void app_main(void)
     
     // Create task pinned to Core 1
     xTaskCreatePinnedToCore(
-        task_core1,             // Task function
+        task_sensore_read,             // Task function
         "blink_core1",          // Task name
         2048,                   // Stack size (bytes)
         NULL,                   // Parameters
